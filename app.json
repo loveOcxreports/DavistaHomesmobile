@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Davista Invoice",
+    "slug": "davista-invoice-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFFFF",
+    "scheme": "davista-invoice",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#8C2F39"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.davistahomes.invoice"
+    },
+    "android": {
+      "package": "com.davistahomes.invoice",
+      "adaptiveIcon": {
+        "backgroundColor": "#8C2F39",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
