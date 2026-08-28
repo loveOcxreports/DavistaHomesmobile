@@ -65,6 +65,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
+    // Matches the parent's clip radius on the right edge — on
+    // react-native-web, overflow:hidden's clip can leave a hairline gap at
+    // the curve that lets an unrounded absolute child bleed through.
+    borderTopRightRadius: radii.lineBlock,
+    borderBottomRightRadius: radii.lineBlock,
   },
   deleteLabel: {
     color: '#fff',

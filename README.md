@@ -18,6 +18,56 @@ npm install
 npm run ios      # or: npm run android
 ```
 
+## Browser preview (GitHub Pages)
+
+`index.html`, `_expo/`, `favicon.ico`, `metadata.json`, and `assets/node_modules/`
+at the repo root are a static **web build** of this same app (via
+`react-native-web`), committed so GitHub Pages can serve it directly at this
+repo's Pages URL — a quick way to click around the UI without a
+simulator/device. It is a convenience preview, not the shipped product: see
+"Web build — what's different" below for what doesn't match native.
+
+**This build is a snapshot** — it does not rebuild automatically. After
+changing app code, refresh it:
+
+```
+npm run build:web            # exports to ./web-dist (gitignored)
+cp -r web-dist/index.html web-dist/favicon.ico web-dist/metadata.json .
+cp -r web-dist/_expo/. _expo/
+mkdir -p assets/node_modules && cp -r web-dist/assets/node_modules/. assets/node_modules/
+rm -rf web-dist
+git add index.html favicon.ico metadata.json _expo assets/node_modules
+```
+
+Then commit and push. (A GitHub Actions workflow that does this on every
+push would be a reasonable follow-up if the preview is worth keeping current
+long-term.)
+
+### Web build — what's different from native
+
+`react-native-web` covers most of the app as-is, but a few native-only
+pieces have web-specific fallbacks (Metro/RNW picks the `.web.tsx`/`.web.ts`
+file automatically — see each pair):
+
+- **Date picker** (`DateField.tsx` / `DateField.web.tsx`) — native uses
+  `@react-native-community/datetimepicker` (no web build exists); web uses a
+  plain `<input type="date">`.
+- **Invoice sheet preview** (`HtmlSheetView.tsx` / `HtmlSheetView.web.tsx`)
+  — native uses `react-native-webview` (also has no web build — it renders
+  literal "does not support this platform" text if used directly); web uses
+  an `<iframe srcDoc>`.
+- **PDF export / Share** (`exportPdf.ts` / `exportPdf.web.ts`) — native uses
+  `expo-print` + `expo-sharing` to produce and share a real PDF file. On web,
+  `expo-print`'s `printToFileAsync` silently ignores the html argument and
+  just calls `window.print()` on the current page, which isn't useful here,
+  so the web build instead opens the invoice sheet in a new tab and calls
+  the browser's print dialog on *that* — "Save as PDF" from there is the
+  web equivalent of native's PDF export. Share falls back to the same print
+  dialog, since there's no real file to hand to `navigator.share` on web.
+
+Everything else (editor, saved invoices, guest book, swipe-to-delete,
+AsyncStorage via `localStorage`, fonts, navigation) runs unmodified.
+
 ## Project layout
 
 ```
@@ -43,16 +93,19 @@ src/
                               screen, not a tab" spec
   screens/
     InvoiceEditorScreen.tsx    the editor (default tab)
-    PreviewScreen.tsx          live A4 preview (WebView) + Share/Export PDF
+    PreviewScreen.tsx          live A4 preview (HtmlSheetView) + Share/Export PDF
     SavedScreen.tsx            saved invoices, search, open/duplicate/delete
     GuestsScreen.tsx           guest book, "Use" fills the editor
-  components/                  Field, DateField, Card, Button, Toast,
-                              SwipeableRow (swipe-to-delete on line items)
+  components/                  Field, DateField (+ .web), Card, Button, Toast,
+                              HtmlSheetView (+ .web), SwipeableRow
+                              (swipe-to-delete on line items)
   pdf/
     sheetHtml.ts                generates the invoice sheet as an HTML string
                               — the single source of truth for both the
-                              in-app Preview (WebView) and the exported PDF
-    exportPdf.ts                expo-print + expo-sharing wiring
+                              in-app Preview and the exported PDF
+    exportPdf.ts (+ .web.ts)    expo-print + expo-sharing wiring (native);
+                              browser print dialog (web) — see "Web build"
+                              below
 ```
 
 ## The invoice sheet — two scales, one generator

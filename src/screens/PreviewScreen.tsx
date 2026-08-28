@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
 import { useInvoiceStore } from '../state/InvoiceStore';
 import { buildSheetHtml } from '../pdf/sheetHtml';
 import { exportInvoicePdf, shareInvoicePdf } from '../pdf/exportPdf';
 import { Button } from '../components/Button';
+import { HtmlSheetView } from '../components/HtmlSheetView';
 import { colors, fonts, radii, shadows } from '../lib/theme';
 
 export function PreviewScreen() {
@@ -21,7 +21,9 @@ export function PreviewScreen() {
     setBusy('export');
     try {
       const path = await exportInvoicePdf(f);
-      Alert.alert('PDF exported', path);
+      // On web the print dialog itself is the feedback — a JS alert would
+      // just stack on top of it.
+      if (Platform.OS !== 'web') Alert.alert('PDF exported', path);
     } catch (e) {
       Alert.alert('Export failed', e instanceof Error ? e.message : String(e));
     } finally {
@@ -52,14 +54,7 @@ export function PreviewScreen() {
 
       <View style={styles.canvas}>
         <View style={[styles.sheetCard, shadows.sheet]}>
-          <WebView
-            originWhitelist={['*']}
-            source={{ html }}
-            style={styles.webview}
-            scalesPageToFit
-            renderLoading={() => <ActivityIndicator style={StyleSheet.absoluteFill} color={colors.primary} />}
-            startInLoadingState
-          />
+          <HtmlSheetView html={html} />
         </View>
       </View>
 
@@ -92,7 +87,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.sheet,
     overflow: 'hidden',
   },
-  webview: { flex: 1, backgroundColor: '#fff' },
   actionBar: {
     flexDirection: 'row',
     gap: 10,
